@@ -13,3 +13,13 @@ Root cause: AWS Cost Explorer requires tags to be explicitly activated as "cost 
 Fix: Activated the team and cost-center tags under Billing and Cost Management > Cost Allocation Tags in the AWS Console. Verified the query logic itself was correct by inspecting the response structure, and proceeded with local test data for downstream development rather than blocking on the propagation delay.
 
 Interview angle: A genuinely non-obvious AWS behavior that most self-taught candidates never encounter, since it only surfaces once you try to query cost data by tag for real. Demonstrates the difference between "the code is wrong" and "the code is correct but the data source has an activation/propagation requirement" — an important distinction in real troubleshooting.
+
+## 2. Anomaly detection flagged a normal day as an anomaly on first run
+
+What happened: Running the z-score based anomaly detector against freshly simulated data flagged platform-team as an anomaly, even though the underlying data was pure random variation with no deliberately injected spike.
+
+Root cause: This is not a bug. A z-score threshold of 2.0 standard deviations will, by the mathematical nature of a normal distribution, flag approximately 5 percent of genuinely normal observations as anomalous purely by chance. This is the expected false-positive rate for that threshold, not a flaw in the detection logic.
+
+Resolution: None needed, this is correct behavior. Documented explicitly so the tradeoff is understood rather than mistaken for a defect: a lower threshold catches more real anomalies but produces more false positives, a higher threshold produces fewer false positives but risks missing real anomalies. The threshold of 2.0 was chosen as a reasonable starting point, adjustable based on how noisy real alerting proves to be in practice.
+
+Interview angle: Demonstrates statistical literacy around anomaly detection specifically the false-positive/false-negative tradeoff inherent to any threshold-based alerting system, rather than presenting anomaly detection as something that can be made perfectly accurate.
