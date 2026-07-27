@@ -23,3 +23,7 @@ Root cause: This is not a bug. A z-score threshold of 2.0 standard deviations wi
 Resolution: None needed, this is correct behavior. Documented explicitly so the tradeoff is understood rather than mistaken for a defect: a lower threshold catches more real anomalies but produces more false positives, a higher threshold produces fewer false positives but risks missing real anomalies. The threshold of 2.0 was chosen as a reasonable starting point, adjustable based on how noisy real alerting proves to be in practice.
 
 Interview angle: Demonstrates statistical literacy around anomaly detection specifically the false-positive/false-negative tradeoff inherent to any threshold-based alerting system, rather than presenting anomaly detection as something that can be made perfectly accurate.
+
+## 3. Terraform state for dashboard bucket kept local, not remote
+
+Note: Unlike Project 1's IDP platform, this project's Terraform state is kept as a local file rather than a remote S3 backend. This was a deliberate scope decision: the dashboard bucket is a single, low-stakes resource, and setting up a full remote-state backend (S3 + DynamoDB locking) for one small bucket was judged not worth the added complexity for this project's scope. The tradeoff: if the local state file is lost, Terraform loses track of these resources, though they would continue to exist and function in AWS. Acceptable risk for this scope, would not be acceptable for a team-shared or production-critical resource.
