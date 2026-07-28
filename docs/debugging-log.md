@@ -27,3 +27,17 @@ Interview angle: Demonstrates statistical literacy around anomaly detection spec
 ## 3. Terraform state for dashboard bucket kept local, not remote
 
 Note: Unlike Project 1's IDP platform, this project's Terraform state is kept as a local file rather than a remote S3 backend. This was a deliberate scope decision: the dashboard bucket is a single, low-stakes resource, and setting up a full remote-state backend (S3 + DynamoDB locking) for one small bucket was judged not worth the added complexity for this project's scope. The tradeoff: if the local state file is lost, Terraform loses track of these resources, though they would continue to exist and function in AWS. Acceptable risk for this scope, would not be acceptable for a team-shared or production-critical resource.
+
+## 4. AWS API calls failed with SignatureDoesNotMatch due to WSL clock drift
+
+What happened: aws sts get-caller-identity and boto3 EC2 calls failed with SignatureDoesNotMatch, reporting the request signature's timestamp was more than 15 minutes outside AWS's accepted window.
+
+Root cause: WSL's system clock had drifted nearly 59 minutes behind real time. AWS signs and validates every API request using a timestamp, and rejects requests where the client's clock has drifted too far from AWS's own time, as a security measure against replay attacks. This is a known WSL behavior, the virtual machine's clock can fall out of sync with the Windows host, particularly after the host sleeps or hibernates.
+
+Fix: Installed ntpsec-ntpdate (the current Ubuntu 26.04 replacement for the deprecated ntpdate package) and ran ntpdate against pool.ntp.org to force an immediate clock correction, confirmed by the reported "time stepped by 3542 seconds" message.
+
+Interview angle: A genuinely non-obvious class of bug, since the actual credentials and code were correct the whole time. Demonstrates reading an error message precisely rather than assuming "credentials are wrong" from a surface-level glance, the specific wording (signature and timestamp, not permissions) was the clue pointing to a clock issue rather than an auth issue.
+
+## 5. Waste detection successfully identified a real idle resource
+
+Note: detect_waste.py was run against the real, live EC2 instance from Project 1 rather than simulated data. It correctly identified the instance as a waste candidate, with 0.15 percent average CPU utilization over 7 days, since the instance has been idle since Project 1's build sessions concluded. This is a genuine, live validation of the detection logic against real production-style data, and a concrete real-world example of the exact problem this project is designed to catch.
