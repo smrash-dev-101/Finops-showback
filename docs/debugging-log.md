@@ -41,3 +41,17 @@ Interview angle: A genuinely non-obvious class of bug, since the actual credenti
 ## 5. Waste detection successfully identified a real idle resource
 
 Note: detect_waste.py was run against the real, live EC2 instance from Project 1 rather than simulated data. It correctly identified the instance as a waste candidate, with 0.15 percent average CPU utilization over 7 days, since the instance has been idle since Project 1's build sessions concluded. This is a genuine, live validation of the detection logic against real production-style data, and a concrete real-world example of the exact problem this project is designed to catch.
+
+## 6. Recurring WSL clock drift caused repeated AuthFailure errors
+
+What happened: AuthFailure and SignatureDoesNotMatch errors recurred multiple times in one session, even after an initial manual ntpdate fix, because WSL's clock drifted again by several minutes within the same working session.
+
+Root cause: A single manual time correction only fixes drift at that instant, it does not prevent the clock from drifting again. WSL's virtual clock is known to drift from the Windows host clock over time without an active, continuously-running sync service.
+
+Fix: Installed and enabled ntpsec as a persistent background service (systemctl enable and start), rather than relying on one-off manual corrections. This keeps the clock continuously synchronized going forward instead of requiring repeated manual intervention.
+
+Interview angle: A good example of the difference between a one-time fix and a durable fix, treating the symptom once versus addressing the actual recurring cause. The same AuthFailure symptom can have multiple underlying triggers across a single session, and reappearing errors after a fix is itself a diagnostic signal worth paying attention to.
+
+## 7. Least-privilege IAM identity validated against real AWS calls
+
+Note: Created a dedicated finops-readonly IAM user scoped to only ce:GetCostAndUsage, ec2:DescribeInstances, cloudwatch:GetMetricStatistics, and s3:PutObject restricted to the single dashboard bucket. Verified by running detect_waste.py under this identity via AWS_PROFILE, confirming it correctly authenticates and returns the same valid result as the broader admin identity, proving the narrower policy grants exactly what the code requires and nothing more.
