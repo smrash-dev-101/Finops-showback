@@ -4,6 +4,10 @@ Automated multi-team AWS cost attribution, anomaly detection, forecasting, and w
 
 Status: Core functionality complete and validated against real AWS infrastructure.
 
+## Architecture
+
+![Architecture diagram](docs/architecture.svg)
+
 ## What this does
 
 Six capabilities, each addressing a real cost-governance problem:
